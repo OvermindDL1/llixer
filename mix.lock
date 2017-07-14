@@ -1,0 +1,2 @@
+%{"dialyxir": {:hex, :dialyxir, "0.5.0", "5bc543f9c28ecd51b99cc1a685a3c2a1a93216990347f259406a910cf048d1d7", [:mix], [], "hexpm"},
+  "ex_spirit": {:hex, :ex_spirit, "0.3.3", "89bd061c68a63b8a4321d768d87e918a7ba60f5a044e5961b14544d1f062901d", [:mix], [], "hexpm"}}
