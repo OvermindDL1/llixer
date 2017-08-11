@@ -28,11 +28,11 @@ defmodule Llixer.Env do
   def define_icall(call)
   def define_icall({module, fun, arity, extra_args}=callee) when is_atom(module) and is_atom(fun) and is_integer(arity) and is_list(extra_args), do: {:internal, callee}
 
-  @doc """
-  Takes values and calls a function and returns a value
-  """
-  def define_call(call)
-  def define_call({module, fun, arity, extra_args}=callee) when is_atom(module) and is_atom(fun) and is_integer(arity) and is_list(extra_args), do: {:call, callee}
+  # @doc """
+  # Takes values and calls a function and returns a value
+  # """
+  # def define_call(call)
+  # def define_call({module, fun, arity, extra_args}=callee) when is_atom(module) and is_atom(fun) and is_integer(arity) and is_list(extra_args), do: {:call, callee}
 
   @doc """
   Takes ast and calls a function and returns an ast
@@ -53,11 +53,11 @@ defmodule Llixer.Env do
   end
 
 
-  def add_call(%{calls: calls}=env, call, to_be_called) do
-    %{env |
-      calls: Map.put(calls, call, define_call(to_be_called)),
-    }
-  end
+  # def add_call(%{calls: calls}=env, call, to_be_called) do
+  #   %{env |
+  #     calls: Map.put(calls, call, define_call(to_be_called)),
+  #   }
+  # end
 
 
   def add_macro(%{calls: calls}=env, call, to_be_called) do

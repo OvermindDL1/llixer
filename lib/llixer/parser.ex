@@ -91,7 +91,7 @@ defmodule Llixer.Parser do
   defrule parser_expression(context, env) do
     context |> alt([
       parser_read_macro(env),
-      parser_expression_list(env) |> parser_expression_tag(:list),
+      parser_expression_list(env) |> parser_expression_tag(:cmd),
       # parser_expression_atom(env) |> parser_expression_tag(:atom),
       lit(?-) |> parser_expression_integer(env) |> pipe_result_into(Kernel.-()) |> parser_expression_tag(:integer),
       parser_expression_integer(env) |> parser_expression_tag(:integer),
@@ -198,7 +198,7 @@ defmodule Llixer.Parser do
     context |> skip() |> no_skip(alt([
       seq([ lit(?0) |> branch(char(), helper_parser_integer_branches()) ]),
       uint(),
-    ]))
+    ]) |> lookahead_not(char([?., ?e, ?E, ?-])))
   end
 
   defrule parser_expression_float(context, _env) do
