@@ -20,13 +20,21 @@ defmodule LlixerTest do
     assert %{rest: "", result: {:cmd, _, [{:name, _, ":+"}, {:integer, _, 1}, {:integer, _, 2}]}} = parse_expression "(:+ 1 2)"
     assert %{rest: "", result: {:name, _, "add"}} = parse_expression "add"
     assert %{rest: "", result: {:name, _, "A string"}} = parse_expression "A\\ string"
-    assert 2 = 1 + 1
+    assert %{rest: "", result: {:cmd, _, [{:name, _, "fn"}, {:cmd, _, [{:cmd, _, [{:name, _, "id"}]}, {:name, _, "id"}]}]}} = parse_expression "(fn ((id) id))"
+  end
+
+  test "Parsing - Read Macro's" do
+    assert %{rest: "", result: {:cmd, _, [{:name, _, "quote"}, {:name, _, "x"}]}} = parse_expression "`x"
+    assert %{rest: "", result: {:cmd, _, [{:name, _, "unquote"}, {:name, _, "x"}]}} = parse_expression ",x"
+    assert %{rest: "", result: {:cmd, _, [{:name, _, "unquote-splicing"}, {:name, _, "x"}]}} = parse_expression ",@x"
   end
 
 
   def testcall(), do: 42
   def testcall(a), do: 42 + a
   test "Sigil" do
+    test = 42
+
     # Direct values
     assert 1 = ~L{1}u
     assert 6.28 = ~L{6.28}u
@@ -84,6 +92,14 @@ defmodule LlixerTest do
     # Quote
     assert {:name, _, "x"} = ~L{quote x}
     assert {:cmd, _, [{:name, _, "blah"}, {:integer, _, 1}]} = ~L{quote (blah 1)}
+    assert 42 = ~L{quote (unquote test)}
+    assert {:cmd, _, [{:name, _,"list"}, {:integer, _, 1}, {:name, _, "test"}, 42]} = ~L{quote (list 1 (unquote-splicing (list (quote test) test)))}
+
+    # Read macro's
+    assert {:name, _, "x"} = ~L{`x}u
+    assert {:cmd, _, [{:name, _, "blah"}, {:integer, _, 1}]} = ~L{`(blah 1)}u
+    assert 42 = ~L{`,test}u
+    assert {:cmd, _, [{:name, _,"list"}, {:integer, _, 1}, {:name, _, "test"}, 42]} = ~L{`(list 1 ,@(list `test test))}u
   end
 
   ~L{Elixir.Kernel.defmodule (atom TestGenModule0) (list (do))}

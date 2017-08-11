@@ -15,7 +15,7 @@ defmodule Llixer.SyntaxHelpers do
     case Llixer.Parser.parse_expression(context, env) do
       %{error: nil, result: result}=context ->
         %{context |
-          result: {:list, meta, [{:name, meta, "quote"}, result]}
+          result: {:cmd, meta, [{:name, meta, "quote"}, result]}
         }
       error_context -> error_context
     end
@@ -26,7 +26,18 @@ defmodule Llixer.SyntaxHelpers do
     case Llixer.Parser.parse_expression(context, env) do
       %{error: nil, result: result}=context ->
         %{context |
-          result: {:list, meta, [{:name, meta, "unquote"}, result]}
+          result: {:cmd, meta, [{:name, meta, "unquote"}, result]}
+        }
+      error_context -> error_context
+    end
+  end
+
+  def read_macro__unquote_splicing(context, env) do
+    meta = Llixer.Parser.get_meta_from_context(context)
+    case Llixer.Parser.parse_expression(context, env) do
+      %{error: nil, result: result}=context ->
+        %{context |
+          result: {:cmd, meta, [{:name, meta, "unquote-splicing"}, result]}
         }
       error_context -> error_context
     end

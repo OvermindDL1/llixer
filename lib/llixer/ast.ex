@@ -41,7 +41,7 @@ defmodule Llixer.AST do
   end
   defp to_elixir_ast(env, {:list, meta, args}) when is_list(args) do
     {env, args} = Env.map_env(env, args, &to_elixir_ast/2)
-    ast = {:__block__, meta, [args]}
+    # ast = {:__block__, meta, [args]}
     ast = args
     {env, ast}
   end
@@ -168,16 +168,19 @@ defmodule Llixer.AST do
     TreeMap.new()
     |> TreeMap.add("`", {Llixer.SyntaxHelpers, :read_macro__quote, []})
     |> TreeMap.add(",", {Llixer.SyntaxHelpers, :read_macro__unquote, []})
+    |> TreeMap.add(",@", {Llixer.SyntaxHelpers, :read_macro__unquote_splicing, []})
     |> TreeMap.add("\"", {Llixer.SyntaxHelpers, :read_macro__string, []})
   ))
 
   def default_calls(), do: %{
     "quote" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__quote, 1, []}),
     "list" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__list, -1, []}),
+    "list-flatten" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__list_flatten, -1, []}),
     "tuple" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__tuple, -1, []}),
     "map" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__map, -1, []}),
     "atom" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__atom, 1, []}),
     "string" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__string, 1, []}),
+    "charlist" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__charlist, 1, []}),
     "fn" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__fn, -1, []}),
     "do" => Env.define_icall({Llixer.Evaluator.Stdlib, :i__do, -1, []}),
   }

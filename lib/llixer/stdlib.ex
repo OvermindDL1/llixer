@@ -41,26 +41,43 @@ defmodule Llixer.Evaluator.Stdlib do
   # end
 
 
-  def escape_sexpr(sexpr)
-  def escape_sexpr(atom) when is_atom(atom), do: {:atom, [], atom}
-  def escape_sexpr(integer) when is_integer(integer), do: {:integer, [], integer}
-  def escape_sexpr(string) when is_binary(string), do: {:string, [], string}
-  def escape_sexpr(list) when is_list(list) do
-    list = Enum.map(list, &escape_sexpr/1)
-    {:list, [], list}
+  def id_fun_ast() do
+    {:cmd, [], [{:name, [], "fn"}, {:cmd, [], [{:cmd, [], [{:name, [], "id"}]}, {:name, [], "id"}]}]}
   end
-  def escape_sexpr(tuple) when is_tuple(tuple) do
+
+  def escape_sexpr(unquoting \\ false, spliceable \\ false, sexpr)
+  def escape_sexpr(_unquoting, _spliceable, atom) when is_atom(atom),          do: {:list, [], [{:atom, [], atom}]}
+  def escape_sexpr(_unquoting, _spliceable, integer) when is_integer(integer), do: {:list, [], [{:integer, [], integer}]}
+  def escape_sexpr(_unquoting, _spliceable, string) when is_binary(string),    do: {:list, [], [{:string, [], string}]}
+  def escape_sexpr(unquoting, _spliceable, list) when is_list(list) do
+    list = Enum.map(list, &escape_sexpr(unquoting, true, &1))
+    ast = {:list, [], list}
+    ast = {:cmd, [direct_call: true], [{:name, [], "lists.flatmap"}, id_fun_ast(), ast]}
+    {:list, [], [ast]}
+  end
+  def escape_sexpr(true, _spliceable, {:cmd, _, [{:name, _, "unquote"}, arg]}), do: {:list, [], [arg]}
+  def escape_sexpr(true, true, {:cmd, _, [{:name, _, "unquote-splicing"}, args]}), do: args
+  def escape_sexpr(unquoting, _spliceable, tuple) when is_tuple(tuple) do
     list =
       tuple
       |> Tuple.to_list()
-      |> Enum.map(&escape_sexpr/1)
-    {:tuple, [], list}
+      |> Enum.map(&escape_sexpr(unquoting, true, &1))
+    ast = {:list, [], list}
+    ast = {:cmd, [direct_call: true], [{:name, [], "lists.flatmap"}, id_fun_ast(), ast]}
+    ast = {:cmd, [direct_call: true], [{:name, [], "erlang.list_to_tuple"}, ast]}
+    {:list, [], [ast]}
   end
-  def escape_sexpr(sexpr), do: throw {:UNHANDLED_SEXPR_ESCAPE, sexpr}
+  def escape_sexpr(_unquoting, _spliceable, sexpr), do: throw {:UNHANDLED_SEXPR_ESCAPE, sexpr}
 
 
   def i__quote(env, {:cmd, _meta, [_quote, sexpr]}) do
-    sexpr = escape_sexpr(sexpr)
+    {:list, [], [sexpr]} = escape_sexpr(true, sexpr)
+    # sexprs = {:list, [blah: true, ]++meta, sexprs}
+    # sexpr = {:cmd, [direct_call: true], [{:name, meta, "lists.flatmap"}, id_fun_ast(), sexprs]}
+      # case escape_sexpr(true, sexpr) do
+      #   [sexpr] -> sexpr
+      #   sexprs -> {:list, meta, sexprs}
+      # end
     {env, sexpr}
   end
 
@@ -75,6 +92,11 @@ defmodule Llixer.Evaluator.Stdlib do
   end
 
   def i__string(env, {:cmd, _meta, [_string, {:name, name_meta, name}]}) do
+    {env, {:string, name_meta, name}}
+  end
+
+  def i__charlist(env, {:cmd, _meta, [_string, {:name, name_meta, name}]}) do
+    name = String.to_charlist(name)
     {env, {:string, name_meta, name}}
   end
 

@@ -8,8 +8,19 @@ defmodule Llixer.Parser do
   alias Llixer.Env
 
 
-  def parse_expression(%Env{}=env, input) do
-    parse(input, parser_expression(env) |> skip(), skipper: parser_skipper())
+  def parse_expression(env, input, opts \\ [])
+
+  def parse_expression(%Env{}=env, input, opts) do
+    context = %ExSpirit.Parser.Context{}
+    context = %{context |
+      skipper:  fn context -> context |> parser_skipper() end,
+      rest:     input,
+      filename: opts[:filename] || context.filename,
+      line:     opts[:line]     || context.line,
+      column:   opts[:column]   || context.column,
+    }
+    parse_expression(context, env, [])
+    # parse(input, parser_expression(env) |> skip(), skipper: parser_skipper())
     # case parse(input, parser_expression(env), skipper: parser_skipper()) do
     #   %{error: nil, rest: rest, result: result} -> # There is a read macro defined for here
     #     {result, rest}
@@ -17,8 +28,8 @@ defmodule Llixer.Parser do
     # end
   end
 
-  def parse_expression(%ExSpirit.Parser.Context{}=context, env) do
-    context |> parser_expression(env)
+  def parse_expression(%ExSpirit.Parser.Context{}=context, %Env{}=env, []) do
+    context |> parser_expression(env) |> skip()
   end
 
 
