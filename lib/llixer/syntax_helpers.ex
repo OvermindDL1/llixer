@@ -5,7 +5,7 @@ defmodule Llixer.SyntaxHelpers do
   Currently includes:
 
   * Read-Macro's
-    * Quote, turn \\` into `(quasiquote ...)`
+    * Quote, turn \\` into `(quote ...)`
     * Tuple Expressions delinated by `{` and `}` that gets turned in to `(Llixer.SyntaxHelpers.Tuple.lit ...)` calls
     * Map Expressions delinated by `%` that gets turned in to `(Llixer.SyntaxHelpers.Map.lit (..., ...)...)` calls
   """
