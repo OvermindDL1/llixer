@@ -28,6 +28,7 @@ defmodule Llixer.Mixfile do
     [
       {:ex_spirit, "~> 0.3.3"},
       {:dialyxir, "~> 0.5.0", only: [:dev, :test], runtime: false},
+      {:cortex, "~> 0.3.0", only: [:dev, :test]},
     ]
   end
 end
