@@ -5,22 +5,23 @@ defmodule Llixer.Simple.Env do
 
   alias ExSpirit.TreeMap, as: TreeMap
 
+
   defstruct [
     read_macros: TreeMap.new(),
-    scopes: [],
-    # safe: false,
+    scopes: [{__MODULE__, %{}}],
+    safe: false,
   ]
 
 
   def new(opts \\ []) do
     %__MODULE__{
-      # safe: opts[:safer] || false,
+      safe: opts[:safer] || false,
       read_macros: opts[:mapper] && opts[:mapper].default_read_macros() || TreeMap.new(),
     }
   end
 
 
-  def add_read_macro(%{read_macros: read_macros}=env, input, {module, fun, args}) when is_atom(module) and is_atom(fun) and is_list(args) do
+  def add_read_macro(%{read_macros: read_macros} = env, input, {module, fun, args}) when is_atom(module) and is_atom(fun) and is_list(args) do
     if Code.ensure_compiled?(module) and :erlang.function_exported(module, fun, 1 + length(args)) do
       %{env |
         read_macros: TreeMap.add(read_macros, input, {module, fun, args}),
@@ -28,6 +29,46 @@ defmodule Llixer.Simple.Env do
     else
       throw :blah
     end
+  end
+
+
+  @doc ~S"""
+
+      iex> env = Llixer.Simple.Env.new()
+      iex> Llixer.Simple.Env.push(env, "test", 42).scopes |> hd() |> elem(1)
+      %{"test" => 42}
+
+
+  """
+  def push(env, name, value) do
+    put_in(env, [Access.key!(:scopes), Access.at(0), Access.elem(1), name], value)
+  end
+
+  def get(env, name) do
+    Enum.find_value(env.scopes, :error, fn
+      {_scope_name, %{^name => value}} -> {:ok, value}
+      _ -> nil
+    end)
+  end
+
+  def get!(env, name) do
+    case get(env, name) do
+      {:ok, value} -> value
+      :error -> throw {:MISSING_REQUIRED_NAME, name}
+    end
+  end
+
+
+  def push_scope(env, id, %{} = scope \\ %{}) do
+    %{env|
+      scopes: [{id, scope} | env.scopes],
+    }
+  end
+
+  def pop_scope(%{scopes: [{id, _scope} | scopes]} = env, id) do
+    %{env|
+      scopes: scopes,
+    }
   end
 
 

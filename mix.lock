@@ -1,4 +1,4 @@
-%{"cortex": {:hex, :cortex, "0.3.0", "52f6621ce33cabc8b7d41b79fd48fc7b0b48e774bafbca7d52476bfef8f41bc3", [], [{:file_system, "~> 0.2", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm"},
-  "dialyxir": {:hex, :dialyxir, "0.5.0", "5bc543f9c28ecd51b99cc1a685a3c2a1a93216990347f259406a910cf048d1d7", [:mix], [], "hexpm"},
-  "ex_spirit": {:hex, :ex_spirit, "0.3.3", "89bd061c68a63b8a4321d768d87e918a7ba60f5a044e5961b14544d1f062901d", [:mix], [], "hexpm"},
-  "file_system": {:hex, :file_system, "0.2.1", "c4bec8f187d2aabace4beb890f0d4e468f65ca051593db768e533a274d0df587", [], [], "hexpm"}}
+%{"cortex": {:hex, :cortex, "0.3.0", "52f6621ce33cabc8b7d41b79fd48fc7b0b48e774bafbca7d52476bfef8f41bc3", [:mix], [{:file_system, "~> 0.2", [hex: :file_system, optional: false]}]},
+  "dialyxir": {:hex, :dialyxir, "0.5.0", "5bc543f9c28ecd51b99cc1a685a3c2a1a93216990347f259406a910cf048d1d7", [:mix], []},
+  "ex_spirit": {:hex, :ex_spirit, "0.3.3", "89bd061c68a63b8a4321d768d87e918a7ba60f5a044e5961b14544d1f062901d", [:mix], []},
+  "file_system": {:hex, :file_system, "0.2.1", "c4bec8f187d2aabace4beb890f0d4e468f65ca051593db768e533a274d0df587", [:mix], []}}
