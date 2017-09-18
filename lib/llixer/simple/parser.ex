@@ -21,6 +21,7 @@ defmodule Llixer.Simple.Parser do
 
 
   token_separators = [?\s,  ?\n,  ?\r,  ?\t]
+  def get_token_separators, do: unquote(token_separators)
 
 
   def parse_expression(env, input, opts \\ [])
@@ -75,7 +76,7 @@ defmodule Llixer.Simple.Parser do
   defrule parser_read_macro_exec(context) do
     case context.result do
       {module, fun, args} ->
-        case apply(module, fun, [context]++args) do
+        case apply(module, fun, [%{context | result: nil}]++args) do
           %Context{error: nil, result: result} = context ->
             if is_sexpr?(result) do
               context
@@ -104,8 +105,10 @@ defmodule Llixer.Simple.Parser do
   defrule parser_symbol(context) do
     context |> skip()
     |> repeat(no_skip(alt([
-        chars([-?), -?\\ | unquote(Enum.map(token_separators, &Kernel.-/1))]),
+        chars([-?(, -?), -?\\ | unquote(Enum.map(token_separators, &Kernel.-/1))]),
         lit(?\\) |> alt([
+          lit(?() |> success(?(),
+          lit(?)) |> success(?)),
           lit(?n) |> success(?\n),
           lit(?r) |> success(?\r),
           lit(?t) |> success(?\t),

@@ -27,7 +27,7 @@ defmodule Llixer.Simple.Env do
         read_macros: TreeMap.add(read_macros, input, {module, fun, args}),
       }
     else
-      throw :blah
+      throw {:READMACRO, :doesnotexist, module, fun, 1 + length(args)}
     end
   end
 
@@ -89,6 +89,19 @@ defmodule Llixer.Simple.Env do
     {env, result} = func.(env, value)
     reversed_results = [result | reversed_results]
     map_env(env, rest, func, reversed_results)
+  end
+
+
+  def flatmap_env(env, enumerable, func), do: flatmap_env_(env, func, enumerable)
+
+  defp flatmap_env_(env, _func, []) do
+    {env, []}
+  end
+  defp flatmap_env_(env, func, [value | rest]) do
+    {env, results} = func.(env, value)
+    {env, rest} = flatmap_env_(env, func, rest)
+    results = results ++ rest
+    {env, results}
   end
 
 
