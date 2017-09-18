@@ -1,20 +1,23 @@
 defmodule Llixer.Simple.SpecialForms do
 
-  import Llixer.Simple.Evaluator, only: [eval_sexpr: 2, binding_: 1, fun_: 1, fun_: 2]
+  import Llixer.Simple.Evaluator, only: [eval_sexpr: 2, binding_: 1, cmd_: 1, cmd_: 2]
 
   alias Llixer.Simple.Env
 
   def scope, do: %{
-    fun_("binding", 1) => {:special_form, __MODULE__, :symbol_to_binding, []},
-    fun_("atom", 1) => {:special_form, __MODULE__, :symbol_to_atom, []},
-    fun_("string", 1) => {:special_form, __MODULE__, :symbol_to_string, []},
-    fun_("integer", 1) => {:special_form, __MODULE__, :symbol_to_integer, []},
-    fun_("integer", 2) => {:special_form, __MODULE__, :symbol_to_integer_base, []},
-    fun_("float", 1) => {:special_form, __MODULE__, :symbol_to_float, []},
-    fun_("atom?", 1) => {:special_form, __MODULE__, :symbol_is_atom, []},
-    fun_("string?", 1) => {:special_form, __MODULE__, :symbol_is_string, []},
-    fun_("integer?", 1) => {:special_form, __MODULE__, :symbol_is_integer, []},
-    fun_("float?", 1) => {:special_form, __MODULE__, :symbol_is_float, []},
+    cmd_("binding", 1) => {:special_form, __MODULE__, :symbol_to_binding, [], %{}},
+    cmd_("atom", 1) => {:special_form, __MODULE__, :symbol_to_atom, [], %{}},
+    cmd_("string", 1) => {:special_form, __MODULE__, :symbol_to_string, [], %{}},
+    cmd_("integer", 1) => {:special_form, __MODULE__, :symbol_to_integer, [], %{}},
+    cmd_("integer", 2) => {:special_form, __MODULE__, :symbol_to_integer_base, [], %{}},
+    cmd_("float", 1) => {:special_form, __MODULE__, :symbol_to_float, [], %{}},
+    cmd_("atom?", 1) => {:special_form, __MODULE__, :symbol_is_atom, [], %{}},
+    cmd_("string?", 1) => {:special_form, __MODULE__, :symbol_is_string, [], %{}},
+    cmd_("integer?", 1) => {:special_form, __MODULE__, :symbol_is_integer, [], %{}},
+    cmd_("float?", 1) => {:special_form, __MODULE__, :symbol_is_float, [], %{}},
+    cmd_("lambda", 2) => {:special_form, __MODULE__, :define_lambda, [], %{}},
+    cmd_("defun") => {:special_form, __MODULE__, :define_function, [], %{}},
+    cmd_("defspecialform") => {:special_form, __MODULE__, :define_specialform, [], %{}},
   }
 
 
@@ -96,5 +99,72 @@ defmodule Llixer.Simple.SpecialForms do
     {env, value} = eval_sexpr(env, sexpr)
     {env, is_float(value)}
   end
+
+
+  ## Definitions
+
+  def generate_function(env, arity, head, body)
+  def generate_function(env, -1, head, body) do
+    generate_function(env, 1, head, body)
+  end
+  def generate_function(env, 0, [], body) do
+    fn ->
+      {_env, value} = eval_sexpr(env, body)
+      value
+    end
+  end
+  for i <- 0..15 do
+    args = Enum.map(1..i, fn i -> String.to_atom("$ARG-#{i}") end)
+    def generate_function(env, unquote(i), args, body) do
+      env = Env.push_scope_blocker(env, :lambda)
+      fn(unquote_splicing(args)) ->
+        env =
+          Env.zipmap_env(env, args, unquote(args), fn(env, name, value) ->
+            Env.push(env, binding_(name), value)
+          end)
+        :blah
+      end
+    end
+  end
+
+  def wrap_function_call(head, body, args) do
+    throw {head, body, args}
+  end
+
+  def define_lambda(env, [_cmd, head, body]) do
+    {arity, head} =
+      case head do
+        arg_name when is_binary(arg_name) -> {1, [arg_name]}
+        head when is_list(head) -> {length(head), head}
+      end
+    Enum.each(head, fn
+      b when is_binary(b) -> b
+      invalid -> throw {:INVALID_FUNC_HEAD, invalid}
+    end)
+    value = generate_function(env, arity, head, body)
+    {env, value}
+  end
+
+  def define_function(env, [_cmd, name, head | body], type \\ :function) when is_binary(name) and is_list(head) do
+    {cmd, head} =
+      case head do
+        arg_name when is_binary(arg_name) -> {cmd_(name), [arg_name]}
+        head when is_list(head) -> {cmd_(name, length(head)), head}
+      end
+    Enum.each(head, fn b when is_binary(b) -> b; invalid -> throw {:INVALID_FUNC_HEAD, invalid} end)
+    {meta, body} =
+      case body do
+        [["string", doc] | body] when is_binary(doc) -> {%{force_splice: true, doc: doc}, body}
+        _ -> {%{force_splice: true}, body}
+      end
+    env = Env.push(env, cmd, {type, __MODULE__, :wrap_function_call, [head, body], meta})
+    {env, true}
+  end
+
+  # def define_specialform(env, [_cmd, name, args, body]) when is_list(args) do
+  #   {env, name} = symbol_to_string(env, [:_, name])
+  #   arity = length(args)
+  #   env = Env.push(env, name, value)
+  # end
 
 end

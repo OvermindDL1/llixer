@@ -45,9 +45,10 @@ defmodule Llixer.Simple.Env do
   end
 
   def get(env, name) do
-    Enum.find_value(env.scopes, :error, fn
-      {_scope_name, %{^name => value}} -> {:ok, value}
-      _ -> nil
+    Enum.reduce_while(env.scopes, :error, fn
+      {_scope_name, %{^name => value}}, _ -> {:halt, {:ok, value}}
+      {_scope_name, _scope}, _ -> {:cont, :error}
+      _scope_name, _ -> {:halt, :error}
     end)
   end
 
@@ -62,6 +63,12 @@ defmodule Llixer.Simple.Env do
   def push_scope(env, id, %{} = scope \\ %{}) do
     %{env|
       scopes: [{id, scope} | env.scopes],
+    }
+  end
+
+  def push_scope_blocker(env, id) do
+    %{env|
+      scopes: [id | env.scopes]
     }
   end
 

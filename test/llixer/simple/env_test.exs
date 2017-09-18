@@ -16,6 +16,23 @@ defmodule Llixer.Simple.EnvTest do
       env
       |> Env.push("test", 42)
       |> Env.get("notfound")
+
+    assert {:ok, 42} =
+      env
+      |> Env.push("test", 42)
+      |> Env.get("test")
+
+    assert {:ok, 42} =
+      env
+      |> Env.push("test", 42)
+      |> Env.push_scope(:test)
+      |> Env.get("test")
+
+    assert :error =
+      env
+      |> Env.push("test", 42)
+      |> Env.push_scope_blocker(:test)
+      |> Env.get("test")
   end
 
   test "scopes" do
