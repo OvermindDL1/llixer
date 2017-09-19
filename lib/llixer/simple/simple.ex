@@ -8,7 +8,7 @@ defmodule Llixer.Simple do
   alias Llixer.Simple.SpecialForms
   alias Llixer.Simple.Stdlib
 
-  def read(input, opts \\ []) do
+  def read(<<_::binary>> = input, opts \\ []) do
     env = env_from_opts(opts)
     case Parser.parse_expression(env, input) do
       %{error: nil, rest: rest, result: result} -> {:ok, rest, result}
@@ -21,7 +21,7 @@ defmodule Llixer.Simple do
     Evaluator.eval_sexpr(env, sexprs)
   end
 
-  def read_eval(input, opts \\ []) do
+  def read_eval(<<_::binary>> = input, opts \\ []) do
     env = env_from_opts(opts)
     opts = [env: env] ++ opts
     case read(input, opts) do

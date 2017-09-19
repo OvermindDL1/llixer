@@ -51,6 +51,15 @@ defmodule Llixer.Simple.SpecialFormsTest do
     assert {%Env{}, 'test'} = Evaluator.eval_sexpr(env, ["charlist", ["charlist", "test"]]) # Pass through a charlist, or die
   end
 
+  test "cons and operations", %{env: env} do
+    assert {%Env{}, []} = Evaluator.eval_sexpr(env, [])
+    assert {%Env{}, [[]]} = Evaluator.eval_sexpr(env, ["cons", [], []])
+    assert {%Env{}, [1]} = Evaluator.eval_sexpr(env, ["cons", ["integer", "1"], []])
+    assert {%Env{}, [[] | 1]} = Evaluator.eval_sexpr(env, ["cons", [], ["integer", "1"]])
+    assert {%Env{}, [1 | 1]} = Evaluator.eval_sexpr(env, ["cons", ["integer", "1"], ["integer", "1"]])
+    assert {%Env{}, [1, 2]} = Evaluator.eval_sexpr(env, ["cons", ["integer", "1"], ["cons", ["integer", "2"], []]])
+  end
+
   test "lists", %{env: env} do
     assert {%Env{}, ["test"]} = Evaluator.eval_sexpr(env, ["list", ["string", "test"]])
     assert {%Env{}, ["test1", "test2"]} = Evaluator.eval_sexpr(env, ["list", ["string", "test1"], ["string", "test2"]])
@@ -79,12 +88,12 @@ defmodule Llixer.Simple.SpecialFormsTest do
     assert {%Env{}, ["1", "2"]} = Evaluator.eval_sexpr(env, ["quasiquote", ["1", "2"]])
     assert {%Env{}, "test"} = Evaluator.eval_sexpr(env, ["quasiquote", "test"])
     assert {%Env{}, ["test"]} = Evaluator.eval_sexpr(env, ["quasiquote", ["test"]])
-    assert {%Env{}, ["integer", "1"]} = Evaluator.eval_sexpr(env, ["quasiquote", ["unquote", ["integer", "1"]]])
-    assert {%Env{}, ["integer", "-1"]} = Evaluator.eval_sexpr(env, ["quasiquote", ["unquote", "i"]])
+    assert {%Env{}, 1} = Evaluator.eval_sexpr(env, ["quasiquote", ["unquote", ["integer", "1"]]])
+    assert {%Env{}, -1} = Evaluator.eval_sexpr(env, ["quasiquote", ["unquote", "i"]])
     assert {%Env{}, "test"} = Evaluator.eval_sexpr(env, ["quasiquote", ["unquote", "s"]])
-    assert {%Env{}, [["integer", "1"], ["integer", "-1"]]}   = Evaluator.eval_sexpr(env, ["quasiquote", ["unquote", ["list", ["integer", "1"], "i"]]])
-    assert {%Env{}, [["test", ["integer", "-1"]]]} = Evaluator.eval_sexpr(env, ["quasiquote", [["unquote", ["list", "s", "i"]]]])
-    assert {%Env{}, ["test", ["integer", "-1"]]}   = Evaluator.eval_sexpr(env, ["quasiquote", [["unquote-splicing", ["list", "s", "i"]]]])
+    assert {%Env{}, [1, -1]}   = Evaluator.eval_sexpr(env, ["quasiquote", ["unquote", ["list", ["integer", "1"], "i"]]])
+    assert {%Env{}, [["test", -1]]} = Evaluator.eval_sexpr(env, ["quasiquote", [["unquote", ["list", "s", "i"]]]])
+    assert {%Env{}, ["test", -1]}   = Evaluator.eval_sexpr(env, ["quasiquote", [["unquote-splicing", ["list", "s", "i"]]]])
   end
 
   test "funcall", %{env: env} do
