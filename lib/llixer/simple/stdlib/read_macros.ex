@@ -8,10 +8,14 @@ defmodule Llixer.Simple.Stdlib.ReadMacros do
   def add_read_macros(env) do
     env
     |> Env.add_read_macro("\"", {__MODULE__, :string_doublequoted, []})
-    |> Env.add_read_macro("'", {__MODULE__, :charlist_singlequoted, []})
+    |> Env.add_read_macro("c\"", {__MODULE__, :charlist_singlequoted, []})
     |> Env.add_read_macro(":", {__MODULE__, :atom_colon, []})
     |> Env.add_read_macro("[", {__MODULE__, :list_straightbracket, []})
     |> Env.add_read_macro("{", {__MODULE__, :tuple_curlybracket, []})
+    |> Env.add_read_macro("'", {__MODULE__, :quote, []})
+    |> Env.add_read_macro("`", {__MODULE__, :quasiquote, []})
+    |> Env.add_read_macro(",", {__MODULE__, :unquote_, []})
+    |> Env.add_read_macro(",@", {__MODULE__, :unquote_splicing_, []})
   end
 
   def string_doublequoted(context) do
@@ -28,7 +32,8 @@ defmodule Llixer.Simple.Stdlib.ReadMacros do
 
   def charlist_singlequoted(context) do
     context
-    |> parser_string_singlequoted()
+    # |> parser_string_singlequoted()
+    |> parser_string_doublequoted()
     |> case do
       %{error: nil, result: result} = context when is_binary(result) ->
         %{context |
@@ -83,6 +88,46 @@ defmodule Llixer.Simple.Stdlib.ReadMacros do
       %{error: nil, result: result} = context when is_list(result) ->
         %{context |
           result: ["tuple" | result]
+        }
+      bad_context -> bad_context
+    end
+  end
+
+  def quote(context) do
+    case Parser.parse_expression(context) do
+      %{error: nil, result: result} = context ->
+        %{context |
+          result: ["quote", result]
+        }
+      bad_context -> bad_context
+    end
+  end
+
+  def quasiquote(context) do
+    case Parser.parse_expression(context) do
+      %{error: nil, result: result} = context ->
+        %{context |
+          result: ["quasiquote", result]
+        }
+      bad_context -> bad_context
+    end
+  end
+
+  def unquote_(context) do
+    case Parser.parse_expression(context) do
+      %{error: nil, result: result} = context ->
+        %{context |
+          result: ["unquote", result]
+        }
+      bad_context -> bad_context
+    end
+  end
+
+  def unquote_splicing_(context) do
+    case Parser.parse_expression(context) do
+      %{error: nil, result: result} = context ->
+        %{context |
+          result: ["unquote_splicing", result]
         }
       bad_context -> bad_context
     end

@@ -22,13 +22,13 @@ defmodule Llixer.Simple.Stdlib.ReadMacrosTest do
   end
 
   test "charlists - singlequotes", %{env: env} do
-    assert %{error: nil, rest: "", result: ["charlist", "test"]} = Parser.parse_expression(env, "'test'")
+    assert %{error: nil, rest: "", result: ["charlist", "test"]} = Parser.parse_expression(env, "c\"test\"")
   end
 
   test "atoms - colon", %{env: env} do
     assert %{error: nil, rest: "", result: ["atom", "test"]} = Parser.parse_expression(env, ":test")
     assert %{error: nil, rest: "", result: ["atom", ["string", "test"]]} = Parser.parse_expression(env, ":\"test\"")
-    assert %{error: nil, rest: "", result: ["atom", ["charlist", "test"]]} = Parser.parse_expression(env, ":'test'")
+    assert %{error: nil, rest: "", result: ["atom", ["charlist", "test"]]} = Parser.parse_expression(env, ":c\"test\"")
   end
 
   test "lists - straightbrackets", %{env: env} do
@@ -53,7 +53,7 @@ defmodule Llixer.Simple.Stdlib.ReadMacrosTest do
         ["string", "string"], ["charlist", "charlist"],
         ["string", "string with })]"]
       ]} =
-      Parser.parse_expression(env, ~s([{:key "value"} "string" 'charlist' "string with }\)]"]))
+      Parser.parse_expression(env, ~s([{:key "value"} "string" c"charlist" "string with }\)]"]))
   end
 
 end

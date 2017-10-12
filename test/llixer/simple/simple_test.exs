@@ -54,6 +54,7 @@ defmodule Llixer.SimpleTest do
        (b (lambda (a) a))
        (funcall b a)
     """
+    assert ["test", "a", "thing"] = ~L"`(test a ,`thing)"u
     assert :test = ~L"""
       Elixir.def test(a) a
     """
